@@ -1,11 +1,23 @@
-export type Ability = 'Damage Reduction' | 'Power Strike' | 'Second Wind';
+import { IAbility } from './abilities/Ability';
+import { DamageReduction } from './abilities/DamageReduction';
+import { PowerStrike } from './abilities/PowerStrike';
+import { SecondWind } from './abilities/SecondWind';
+import { VampiricStrike } from './abilities/VampiricStrike';
+
+// lista tuturor abilitatilor disponibile
+const ALL_ABILITIES: IAbility[] = [
+  new DamageReduction(),
+  new PowerStrike(),
+  new SecondWind(),
+  new VampiricStrike(),
+];
 
 export class Character {
   public readonly name: string;
   public health: number;
   public readonly attackPower: number;
   public readonly defensePower: number;
-  public ability: Ability;
+  public ability: IAbility;
 
   constructor(name: string) {
     this.name = name;
@@ -19,40 +31,38 @@ export class Character {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  public assignAbility(): Ability {
-    const abilities: Ability[] = ['Damage Reduction', 'Power Strike', 'Second Wind'];
-    this.ability = abilities[Math.floor(Math.random() * abilities.length)] as Ability;
+  public assignAbility(): IAbility {
+    this.ability = ALL_ABILITIES[Math.floor(Math.random() * ALL_ABILITIES.length)] as IAbility;
     return this.ability;
   }
 
-  // reseteaza viata la valoarea initiala pentru a putea reutiliza acelasi personaj
   public resetHealth(): void {
     this.health = 100;
   }
 
   public getEffectiveAttack(): { power: number; activated: boolean } {
-    if (this.ability === 'Power Strike' && Math.random() < 0.25) {
-      return { power: Math.floor(this.attackPower * 1.5), activated: true };
-    }
-    return { power: this.attackPower, activated: false };
+    return this.ability.modifyAttack(this.attackPower);
   }
 
-  public takeDamage(incomingAttack: number): boolean {
-    let activated = false;
+  public takeDamage(incomingAttack: number): { activated: boolean; damageDealt: number } {
+    const { damage, activated: defenseActivated } = this.ability.modifyDefense(incomingAttack);
 
-    if (this.ability === 'Damage Reduction' && Math.random() < 0.25) {
-      incomingAttack = Math.floor(incomingAttack / 2);
-      activated = true;
-    }
-
-    const damageTaken = Math.max(0, incomingAttack - this.defensePower);
+    const damageTaken = Math.max(0, damage - this.defensePower);
     this.health = Math.max(0, this.health - damageTaken);
 
-    if (this.ability === 'Second Wind' && this.health < 30 && Math.random() < 0.25) {
-      this.health += 5;
-      activated = true;
-    }
+    const { health: newHealth, activated: postActivated } = this.ability.onPostDamage(this.health);
+    this.health = newHealth;
 
+    return {
+      activated: defenseActivated || postActivated,
+      damageDealt: damageTaken,
+    };
+  }
+
+  // aplica efectul post-atac al atacatorului
+  public applyAttackLanded(damageDealt: number): boolean {
+    const { health: newHealth, activated } = this.ability.onAttackLanded(this.health, damageDealt);
+    this.health = newHealth;
     return activated;
   }
 

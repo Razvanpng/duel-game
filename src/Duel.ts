@@ -11,7 +11,6 @@ export class Duel {
     this.isDynamic = isDynamic;
   }
 
-  // silent = true suprima toate log-urile
   public start(silent: boolean = false): Character {
     if (!silent) {
       console.log(`${this.fighter1.name}: attack = ${this.fighter1.attackPower}, defense = ${this.fighter1.defensePower}`);
@@ -30,28 +29,24 @@ export class Duel {
         this.fighter2.assignAbility();
       }
 
+      const { power, activated: attackActivated } = attacker.getEffectiveAttack();
+      const { activated: defenseActivated, damageDealt } = defender.takeDamage(power);
+      const vampiricActivated = attacker.applyAttackLanded(damageDealt);
+
       if (!silent) {
         console.log(`Round ${round}:`);
         console.log(`${attacker.name} attacks`);
-      }
 
-      const { power, activated: attackActivated } = attacker.getEffectiveAttack();
+        if (attackActivated || vampiricActivated) {
+          console.log(`${attacker.name} activates ${attacker.ability.name}`);
+        }
+        if (defenseActivated) {
+          console.log(`${defender.name} activates ${defender.ability.name}`);
+        }
+        if (!attackActivated && !defenseActivated && !vampiricActivated) {
+          console.log('No ability activated');
+        }
 
-      if (!silent && attackActivated) {
-        console.log(`${attacker.name} activates ${attacker.ability}`);
-      }
-
-      const defenseActivated = defender.takeDamage(power);
-
-      if (!silent && defenseActivated) {
-        console.log(`${defender.name} activates ${defender.ability}`);
-      }
-
-      if (!silent && !attackActivated && !defenseActivated) {
-        console.log('No ability activated');
-      }
-
-      if (!silent) {
         console.log(`${defender.name} has ${defender.health} health`);
         console.log('');
       }
@@ -61,7 +56,6 @@ export class Duel {
     }
 
     const winner = this.fighter1.isAlive() ? this.fighter1 : this.fighter2;
-
     if (!silent) {
       console.log(`${winner.name} won!`);
     }
