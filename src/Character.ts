@@ -5,7 +5,7 @@ export class Character {
   public health: number;
   public readonly attackPower: number;
   public readonly defensePower: number;
-  public ability: Ability; // am scos readonly ca sa poata fi schimbata
+  public ability: Ability;
 
   constructor(name: string) {
     this.name = name;
@@ -23,6 +23,11 @@ export class Character {
     const abilities: Ability[] = ['Damage Reduction', 'Power Strike', 'Second Wind'];
     this.ability = abilities[Math.floor(Math.random() * abilities.length)] as Ability;
     return this.ability;
+  }
+
+  // reseteaza viata la valoarea initiala pentru a putea reutiliza acelasi personaj
+  public resetHealth(): void {
+    this.health = 100;
   }
 
   public getEffectiveAttack(): { power: number; activated: boolean } {

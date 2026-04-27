@@ -11,10 +11,13 @@ export class Duel {
     this.isDynamic = isDynamic;
   }
 
-  public start(): void {
-    console.log(`${this.fighter1.name}: attack = ${this.fighter1.attackPower}, defense = ${this.fighter1.defensePower}`);
-    console.log(`${this.fighter2.name}: attack = ${this.fighter2.attackPower}, defense = ${this.fighter2.defensePower}`);
-    console.log('');
+  // silent = true suprima toate log-urile
+  public start(silent: boolean = false): Character {
+    if (!silent) {
+      console.log(`${this.fighter1.name}: attack = ${this.fighter1.attackPower}, defense = ${this.fighter1.defensePower}`);
+      console.log(`${this.fighter2.name}: attack = ${this.fighter2.attackPower}, defense = ${this.fighter2.defensePower}`);
+      console.log('');
+    }
 
     let attacker = Math.random() < 0.5 ? this.fighter1 : this.fighter2;
     let defender = attacker === this.fighter1 ? this.fighter2 : this.fighter1;
@@ -22,39 +25,47 @@ export class Duel {
     let round = 1;
 
     while (this.fighter1.isAlive() && this.fighter2.isAlive()) {
-      // in modul dynamic reatribuim abilitatile la inceput de runda
       if (this.isDynamic) {
         this.fighter1.assignAbility();
         this.fighter2.assignAbility();
       }
 
-      console.log(`Round ${round}:`);
-      console.log(`${attacker.name} attacks`);
+      if (!silent) {
+        console.log(`Round ${round}:`);
+        console.log(`${attacker.name} attacks`);
+      }
 
       const { power, activated: attackActivated } = attacker.getEffectiveAttack();
 
-      if (attackActivated) {
+      if (!silent && attackActivated) {
         console.log(`${attacker.name} activates ${attacker.ability}`);
       }
 
       const defenseActivated = defender.takeDamage(power);
 
-      if (defenseActivated) {
+      if (!silent && defenseActivated) {
         console.log(`${defender.name} activates ${defender.ability}`);
       }
 
-      if (!attackActivated && !defenseActivated) {
+      if (!silent && !attackActivated && !defenseActivated) {
         console.log('No ability activated');
       }
 
-      console.log(`${defender.name} has ${defender.health} health`);
-      console.log('');
+      if (!silent) {
+        console.log(`${defender.name} has ${defender.health} health`);
+        console.log('');
+      }
 
       [attacker, defender] = [defender, attacker];
       round++;
     }
 
     const winner = this.fighter1.isAlive() ? this.fighter1 : this.fighter2;
-    console.log(`${winner.name} won!`);
+
+    if (!silent) {
+      console.log(`${winner.name} won!`);
+    }
+
+    return winner;
   }
 }
